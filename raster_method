@@ -1,0 +1,133 @@
+library(raster)
+library(tictoc)
+library(devtools)
+library(rgdal)
+
+rm(list=ls())
+Sys.setenv("R_MAX_VSIZE" = 8e9)
+
+rasterOptions(maxmemory = 8e10,timer = TRUE,format = "GTiff",overwrite = TRUE, progress = "text",chunksize = 1e9)
+ source('~/GitHub/specimR/R/standardize.R')
+#setwd("/Users/nicholas/Dropbox/CLR-17-4_II-end_2017-10-27_18-04-43/capture")
+setwd("~/Desktop/FORSY")
+#setwd("/Volumes/My Passport/Forsy")
+
+filen <-brick("Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw")
+whiteref <- brick("WHITEREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw")
+darkref <- brick("DARKREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw")
+
+
+scanRGB <- raster::subset(filen,c(270,188, 150))
+scanRGB <- raster::subset(darkref,c(270,188, 150))
+scanRGB <- raster::subset(whiteref,c(270,188, 150))
+
+plotRGB(scanRGB, axes=TRUE, stretch="lin", main="Core image")
+
+plot(filen[[4]][,,1])
+
+cropE <- drawExtent()
+
+
+stripe <- crop(filen,cropE)
+
+#calculate reference mean rows
+whiteRow <- createReferenceMeanRow("WHITEREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw",filen,"WhiteRow.tif")
+darkRow <- createReferenceMeanRow("DARKREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw",filen,"DarkRow.tif")
+
+##use meanrow, not 2, skip this step
+#run for one row and see how long it takes, replicate over length of core
+###start timing it out
+
+#stripe is for manageable size chunking it out 
+
+#whiteRef <- disaggregate(whiteRow,fact = c(1,nrow(stripe)))
+whiteRef <- disaggregate(whiteRow,fact = c(1,100))
+#darkRef <- disaggregate(darkRow,fact = c(1,nrow(stripe)))
+#darkRef <- disaggregate(darkRow,fact = c(1,nrow(filen)))
+darkRef <- disaggregate(darkRow,fact = c(1,100))
+
+subR <- crop(filen, extent(filen, 1, 100, 1, 2184))
+subR2 <- crop(filen, extent(filen, 101, 200, 1, 2184))
+subR3 <- crop(filen, extent(filen, 201, 300, 1, 2184))
+subR4 <- crop(filen, extent(filen, 301, 400, 1, 2184))
+subR5 <- crop(filen, extent(filen, 401, 500, 1, 2184))
+subR6 <- crop(filen, extent(filen, 501, 600, 1, 2184))
+subR7 <- crop(filen, extent(filen, 601, 700, 1, 2184))
+subR8 <- crop(filen, extent(filen, 701, 800, 1, 2184))
+subR9 <- crop(filen, extent(filen, 801, 900, 1, 2184))
+subR10 <- crop(filen, extent(filen, 901, 1000, 1, 2184))
+subR11 <- crop(filen, extent(filen, 1001, 1100, 1, 2184))
+subR12 <- crop(filen, extent(filen, 1101, 1200, 1, 2184))
+subR13 <- crop(filen, extent(filen, 1201, 1300, 1, 2184))
+subR14 <- crop(filen, extent(filen, 1301, 1400, 1, 2184))
+subR15 <- crop(filen, extent(filen, 1401, 1500, 1, 2184))
+
+rm(subR)
+
+#little over an hour
+extent(whiteRef) <- extent(subR); extent(darkRef) <- extent(subR)
+normalized <- overlay(subR,whiteRef,darkRef,fun = normFun,filename = "normalized.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR2); extent(darkRef) <- extent(subR2)
+normalized2 <- overlay(subR2,whiteRef,darkRef,fun = normFun,filename = "normalized2.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR3); extent(darkRef) <- extent(subR3)
+normalized3 <- overlay(subR3,whiteRef,darkRef,fun = normFun,filename = "normalized3.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR4); extent(darkRef) <- extent(subR4)
+normalized4 <- overlay(subR4,whiteRef,darkRef,fun = normFun,filename = "normalized4.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR5); extent(darkRef) <- extent(subR5)
+normalized5 <- overlay(subR5,whiteRef,darkRef,fun = normFun,filename = "normalized5.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR6); extent(darkRef) <- extent(subR6)
+normalized6 <- overlay(subR6,whiteRef,darkRef,fun = normFun,filename = "normalized6.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR7); extent(darkRef) <- extent(subR7)
+normalized7 <- overlay(subR7,whiteRef,darkRef,fun = normFun,filename = "normalized7.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR8); extent(darkRef) <- extent(subR8)
+normalized8 <- overlay(subR8,whiteRef,darkRef,fun = normFun,filename = "normalized8.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR9); extent(darkRef) <- extent(subR9)
+normalized9 <- overlay(subR9,whiteRef,darkRef,fun = normFun,filename = "normalized9.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR10); extent(darkRef) <- extent(subR10)
+normalized10 <- overlay(subR10,whiteRef,darkRef,fun = normFun,filename = "normalized10.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR11); extent(darkRef) <- extent(subR11)
+normalized11 <- overlay(subR11,whiteRef,darkRef,fun = normFun,filename = "normalized11.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR12); extent(darkRef) <- extent(subR12)
+normalized12 <- overlay(subR12,whiteRef,darkRef,fun = normFun,filename = "normalized12.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR13); extent(darkRef) <- extent(subR13)
+normalized13 <- overlay(subR13,whiteRef,darkRef,fun = normFun,filename = "normalized13.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR14); extent(darkRef) <- extent(subR14)
+normalized14 <- overlay(subR14,whiteRef,darkRef,fun = normFun,filename = "normalized14.tif",overwrite = TRUE)
+
+extent(whiteRef) <- extent(subR15); extent(darkRef) <- extent(subR15)
+normalized15 <- overlay(subR15,whiteRef,darkRef,fun = normFun,filename = "normalized15.tif",overwrite = TRUE)
+
+#1:01 at least 20 minutes in
+4091/60
+extent(subR)
+
+##replace filen with normalized data as you move down core
+toc()
+
+test <- getValues(normalized,row = 1)
+
+testRaw<- raster::subset(normalized,c(270,188, 150))
+testNormalized <- raster::subset(subR,c(270,188, 150))
+testWhite <- raster::subset(whiteRef,c(270,188, 150))
+testDark <- raster::subset(darkRef,c(270,188, 150))
+
+layout(matrix(c(1,1,1,1), 2, 2, byrow = TRUE),
+       widths=c(1,1), heights=c(1,1))
+plotRGB(testRaw, axes=TRUE, stretch="lin", main="Raw Image")
+plotRGB(testNormalized, axes=TRUE, stretch="lin", main="Normalized")
+plotRGB(testWhite, axes=TRUE, stretch="lin", main="White Ref")
+plotRGB(testDark, axes=TRUE, stretch="lin", main="Dark Ref")
+
