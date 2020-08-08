@@ -3,19 +3,17 @@ library(tictoc)
 library(devtools)
 library(rgdal)
 
-rm(list=ls())
 Sys.setenv("R_MAX_VSIZE" = 8e9)
-
 rasterOptions(maxmemory = 8e10,timer = TRUE,format = "GTiff",overwrite = TRUE, progress = "text",chunksize = 1e9)
- source('~/GitHub/specimR/R/standardize.R')
+ 
+source('~/GitHub/specimR/R/standardize.R')
 #setwd("/Users/nicholas/Dropbox/CLR-17-4_II-end_2017-10-27_18-04-43/capture")
 setwd("~/Desktop/FORSY")
-#setwd("/Volumes/My Passport/Forsy")
+
 
 filen <-brick("Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw")
 whiteref <- brick("WHITEREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw")
 darkref <- brick("DARKREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw")
-
 
 scanRGB <- raster::subset(filen,c(270,188, 150))
 scanRGB <- raster::subset(darkref,c(270,188, 150))
@@ -25,10 +23,9 @@ plotRGB(scanRGB, axes=TRUE, stretch="lin", main="Core image")
 
 plot(filen[[4]][,,1])
 
-cropE <- drawExtent()
-
-
-stripe <- crop(filen,cropE)
+#Doesnt work for me
+#cropE <- drawExtent(); times out
+#stripe <- crop(filen,cropE)
 
 #calculate reference mean rows
 whiteRow <- createReferenceMeanRow("WHITEREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw",filen,"WhiteRow.tif")
@@ -36,8 +33,6 @@ darkRow <- createReferenceMeanRow("DARKREF_Lakes380_FORSY_LC1U_2B_test_2020-06-0
 
 ##use meanrow, not 2, skip this step
 #run for one row and see how long it takes, replicate over length of core
-###start timing it out
-
 #stripe is for manageable size chunking it out 
 
 #whiteRef <- disaggregate(whiteRow,fact = c(1,nrow(stripe)))
@@ -46,6 +41,7 @@ whiteRef <- disaggregate(whiteRow,fact = c(1,100))
 #darkRef <- disaggregate(darkRow,fact = c(1,nrow(filen)))
 darkRef <- disaggregate(darkRow,fact = c(1,100))
 
+##chunk it out by 100
 subR <- crop(filen, extent(filen, 1, 100, 1, 2184))
 subR2 <- crop(filen, extent(filen, 101, 200, 1, 2184))
 subR3 <- crop(filen, extent(filen, 201, 300, 1, 2184))
