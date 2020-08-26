@@ -1,129 +1,120 @@
 library(raster)
 library(tictoc)
 library(devtools)
-library(rgdal)
+#devtools::install_github("timelyportfolio/svgPanZoom")
+#devtools::install_github("duncantl/SVGAnnotation")
+library(svglite)
+library(svgPanZoom) 
+library(SVGAnnotation)
 
-Sys.setenv("R_MAX_VSIZE" = 8e9)
 rasterOptions(maxmemory = 8e10,timer = TRUE,format = "GTiff",overwrite = TRUE, progress = "text",chunksize = 1e9)
- 
-source('~/GitHub/specimR/R/standardize.R')
-#setwd("/Users/nicholas/Dropbox/CLR-17-4_II-end_2017-10-27_18-04-43/capture")
-setwd("~/Desktop/FORSY")
 
+source('~/Desktop/INF_550_Notes/standardize.R')
+setwd("/Volumes/My Passport/Forsy")
+options(digits=5)
 
-filen <-brick("Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw")
-whiteref <- brick("WHITEREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw")
-darkref <- brick("DARKREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw")
+#load raw file
+filen <-brick("Lakes380_NGAHE_LC1U_1B_S2_2019-11-12_00-02-58.raw")
+dim(filen)
+#all bands
+#allBands <- c(397.26, 398.44, 399.63, 400.81, 402.00, 403.18, 404.37, 405.56, 406.75, 407.93, 409.12, 410.31, 411.50, 412.69, 413.89, 415.08, 416.27, 417.46, 418.66, 419.85, 421.05, 422.24, 423.44, 424.64, 425.84, 427.03, 428.23, 429.43, 430.63, 431.83, 433.04, 434.24, 435.44, 436.64, 437.85, 439.05, 440.26, 441.46, 442.67, 443.87, 445.08, 446.29, 447.50, 448.71, 449.92, 451.13, 452.34, 453.55, 454.76, 455.97, 457.19, 458.40, 459.61, 460.83, 462.04, 463.26, 464.48, 465.69, 466.91, 468.13, 469.35, 470.57, 471.79, 473.01, 474.23, 475.45, 476.67, 477.89, 479.12, 480.34, 481.56, 482.79, 484.01, 485.24, 486.46, 487.69, 488.92, 490.15, 491.37, 492.60, 493.83, 495.06, 496.29, 497.52, 498.75, 499.99, 501.22, 502.45, 503.68, 504.92, 506.15, 507.39, 508.62, 509.86, 511.09, 512.33, 513.57, 514.80, 516.04, 517.28, 518.52, 519.76, 521.00, 522.24, 523.48, 524.72, 525.96, 527.21, 528.45, 529.69, 530.94, 532.18, 533.43, 534.67, 535.92, 537.16, 538.41, 539.66, 540.90, 542.15, 543.40, 544.65, 545.90, 547.15, 548.40, 549.65, 550.90, 552.15, 553.40, 554.65, 555.90, 557.16, 558.41, 559.66, 560.92, 562.17, 563.43, 564.68, 565.94, 567.20, 568.45, 569.71,570.97,572.23,573.48,574.74,576.00,577.26,578.52,579.78,581.04,582.30,583.56,584.83,586.09,587.35,588.61,589.88,591.14,592.40,593.67,594.93,596.20,597.46,598.73,600.00,601.26,602.53,603.80,605.07,606.33,607.60,608.87,610.14,611.41,612.68,613.95,615.22,616.49,617.76,619.03,620.30,621.58,622.85,624.12,625.40,626.67,627.94,629.22,630.49,631.77,633.04,634.32,635.59,636.87,638.14,639.42,640.70,641.98,643.25,644.53,645.81,647.09,648.37,649.65,650.92,652.20,653.48,654.76,656.04,657.33,658.61,659.89,661.17,662.45,663.73,665.02,666.30,667.58,668.86,670.15,671.43,672.72,674.00,675.28,676.57,677.85,679.14,680.43,681.71,683.00,684.28,685.57,686.86,688.14,689.43,690.72,692.01,693.29,694.58,695.87,697.16,698.45,699.74,701.03,702.32,703.61,704.90,706.19,707.48,708.77,710.06,711.35,712.64,713.93,715.22,716.52,717.81,719.10,720.39,721.69,722.98,724.27,725.57,726.86,728.15,729.45,730.74,732.03,733.33,734.62,735.92,737.21,738.51,739.80,741.10,742.39,743.69,744.99,746.28,747.58,748.87,750.17,751.47,752.76,754.06,755.36,756.66,757.95,759.25,760.55,761.85,763.14,764.44,765.74,767.04,768.34,769.64,770.94,772.23,773.53,774.83,776.13,777.43,778.73,780.03,781.33,782.63,783.93,785.23,786.53,787.83,789.13,790.43,791.73,793.03,794.33,795.64,796.94,798.24,799.54,800.84,802.14,803.44,804.74,806.05,807.35,808.65,809.95,811.25,812.56,813.86,815.16,816.46,817.76,819.07,820.37,821.67,822.97,824.28,825.58,826.88,828.18,829.49,830.79,832.09,833.40,834.70,836.00,837.31,838.61,839.91,841.21,842.52,843.82,845.12,846.43,847.73,849.03,850.34,851.64,852.94,854.25,855.55,856.85,858.16,859.46,860.77,862.07,863.37,864.68,865.98,867.28,868.59,869.89,871.19,872.50,873.80,875.10,876.41,877.71,879.01,880.32,881.62,882.92,884.23,885.53,886.83,888.14,889.44,890.74,892.05,893.35,894.65,895.96,897.26,898.56,899.86,901.17,902.47,903.77,905.08,906.38,907.68,908.98,910.29,911.59,912.89,914.19,915.49,916.80,918.10,919.40,920.70,922.00,923.31,924.61,925.91,927.21,928.51,929.81,931.12,932.42,933.72,935.02,936.32,937.62,938.92,940.22,941.52,942.82,944.12,945.42,946.72,948.02,949.32,950.62,951.92,953.22,954.52,955.82,957.12,958.42,959.72,961.02,962.32,963.61,964.91,966.21,967.51,968.81,970.10,971.40,972.70,974.00,975.29,976.59,977.89,979.18,980.48,981.78,983.07,984.37,985.67,986.96,988.26,989.55,990.85,992.14,993.44,994.73,996.03,997.32,998.62, 999.91, 1001.21)
 
-scanRGB <- raster::subset(filen,c(270,188, 150))
-scanRGB <- raster::subset(darkref,c(270,188, 150))
-scanRGB <- raster::subset(whiteref,c(270,188, 150))
+#inspect raw spectra
+#ymax=max(filen[1,,])
+#plot(allBands,filen[1,1,],type="l",ylab="Intensity",xlab="Frequency (nm)",ylim=c(0,ymax),col="#FF000014")
+#for (i in 2:899) lines(allBands,filen[1,i,],col="#FF000014")
 
-plotRGB(scanRGB, axes=TRUE, stretch="lin", main="Core image")
+names <- c("X569.71","X589.88","X615.22","X630.49","X659.89","X665.02","X689.43","X730.74","X790.43","X845.12","X899.86")
+band_names <-c("569.71","589.88","615.22","630.49","659.89","665.02","689.43","730.74","790.43","845.12","899.86")
 
-plot(filen[[4]][,,1])
+raw <- raster::subset(filen,names)
 
-#Doesnt work for me
-#cropE <- drawExtent(); times out
-#stripe <- crop(filen,cropE)
+#is there an option to add extra zoom?
+#This is a cool interactive zoom tool but I havent figured out yet how to get it to work with drawExtent()
+##For now, it helps identify the visual length of the core
 
-#calculate reference mean rows
-whiteRow <- createReferenceMeanRow("WHITEREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw",filen,"WhiteRow.tif")
-darkRow <- createReferenceMeanRow("DARKREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw",filen,"DarkRow.tif")
+svgPanZoom(
+  svgPlot(
+    plotRGB(raw,c(1,5,8), axes=TRUE, stretch="lin", main="Raw Image")
+    )
+)
 
-##use meanrow, not 2, skip this step
-#run for one row and see how long it takes, replicate over length of core
-#stripe is for manageable size chunking it out 
+#take note of visual ruler length
+vLen <- 99.2
 
-#whiteRef <- disaggregate(whiteRow,fact = c(1,nrow(stripe)))
-whiteRef <- disaggregate(whiteRow,fact = c(1,100))
-#darkRef <- disaggregate(darkRow,fact = c(1,nrow(stripe)))
-#darkRef <- disaggregate(darkRow,fact = c(1,nrow(filen)))
-darkRef <- disaggregate(darkRow,fact = c(1,100))
+par(mar = c(0, 1, 0, 1))
+plot(raw[[4]])
+cropE <- zoom(raw[[4]],ext=drawExtent(show = TRUE))
 
-##chunk it out by 100
-subR <- crop(filen, extent(filen, 1, 100, 1, 2184))
-subR2 <- crop(filen, extent(filen, 101, 200, 1, 2184))
-subR3 <- crop(filen, extent(filen, 201, 300, 1, 2184))
-subR4 <- crop(filen, extent(filen, 301, 400, 1, 2184))
-subR5 <- crop(filen, extent(filen, 401, 500, 1, 2184))
-subR6 <- crop(filen, extent(filen, 501, 600, 1, 2184))
-subR7 <- crop(filen, extent(filen, 601, 700, 1, 2184))
-subR8 <- crop(filen, extent(filen, 701, 800, 1, 2184))
-subR9 <- crop(filen, extent(filen, 801, 900, 1, 2184))
-subR10 <- crop(filen, extent(filen, 901, 1000, 1, 2184))
-subR11 <- crop(filen, extent(filen, 1001, 1100, 1, 2184))
-subR12 <- crop(filen, extent(filen, 1101, 1200, 1, 2184))
-subR13 <- crop(filen, extent(filen, 1201, 1300, 1, 2184))
-subR14 <- crop(filen, extent(filen, 1301, 1400, 1, 2184))
-subR15 <- crop(filen, extent(filen, 1401, 1500, 1, 2184))
+stripe <- crop(raw,cropE)
+2115/60 #39 minutes
+names(stripe) <- names(raw)
+plotRGB(stripe,c(1,5,8), axes=TRUE, stretch="lin", main="Raw Image")
 
-rm(subR)
+whiteRow <- createReferenceMeanRow("WHITEREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw",stripe,"WhiteRow.tif",names)
+names(whiteRow) <- names(stripe)
+darkRow <- createReferenceMeanRow("DARKREF_Lakes380_FORSY_LC1U_2B_test_2020-06-05_04-05-39.raw",stripe,"DarkRow.tif",names)
+names(darkRow) <- names(stripe)
 
-#little over an hour
-extent(whiteRef) <- extent(subR); extent(darkRef) <- extent(subR)
-normalized <- overlay(subR,whiteRef,darkRef,fun = normFun,filename = "normalized.tif",overwrite = TRUE)
+#find length of core stripe to break up white
+len <- stripe@nrows
 
-extent(whiteRef) <- extent(subR2); extent(darkRef) <- extent(subR2)
-normalized2 <- overlay(subR2,whiteRef,darkRef,fun = normFun,filename = "normalized2.tif",overwrite = TRUE)
+#disaggregate whiterow to length 
+whiteRef <- disaggregate(whiteRow,fact = c(1,len))
+darkRef <- disaggregate(darkRow,fact = c(1,len))
 
-extent(whiteRef) <- extent(subR3); extent(darkRef) <- extent(subR3)
-normalized3 <- overlay(subR3,whiteRef,darkRef,fun = normFun,filename = "normalized3.tif",overwrite = TRUE)
+#set extents to be the same between stripe and reference files
+extent(whiteRef) <- extent(stripe)
+extent(darkRef) <- extent(stripe)
 
-extent(whiteRef) <- extent(subR4); extent(darkRef) <- extent(subR4)
-normalized4 <- overlay(subR4,whiteRef,darkRef,fun = normFun,filename = "normalized4.tif",overwrite = TRUE)
+#normalization is fast! 47 seconds for Tutae
+normalized <- overlay(stripe,whiteRef,darkRef,fun = normFun,filename = "normalized.tif",overwrite = TRUE)
+names(normalized) <- names(stripe)
 
-extent(whiteRef) <- extent(subR5); extent(darkRef) <- extent(subR5)
-normalized5 <- overlay(subR5,whiteRef,darkRef,fun = normFun,filename = "normalized5.tif",overwrite = TRUE)
+#transposing data for getValues function -- took 3.5 minutes
+norm <- t(normalized)
+names(norm) <- names(stripe)
 
-extent(whiteRef) <- extent(subR6); extent(darkRef) <- extent(subR6)
-normalized6 <- overlay(subR6,whiteRef,darkRef,fun = normFun,filename = "normalized6.tif",overwrite = TRUE)
+data <- getValues(norm,row = 1)
+colnames(data) <- names(stripe)
+bands <- sub("X","",band_names)
 
-extent(whiteRef) <- extent(subR7); extent(darkRef) <- extent(subR7)
-normalized7 <- overlay(subR7,whiteRef,darkRef,fun = normFun,filename = "normalized7.tif",overwrite = TRUE)
+ymax=max(norm[1,,])
+plot(bands,norm[1,1,],type="l",ylab="Intensity",xlab="Frequency (nm)",ylim=c(0,ymax),col="#FF000014")
+for (i in 2:899) lines(bands,norm[1,i,],col="#FF000014")
 
-extent(whiteRef) <- extent(subR8); extent(darkRef) <- extent(subR8)
-normalized8 <- overlay(subR8,whiteRef,darkRef,fun = normFun,filename = "normalized8.tif",overwrite = TRUE)
+RABD665 <- as.data.frame((((59*data[,8]) + (50*data[,2]))/109)/data[,6])
+RABD665 <- as.data.frame((((6*data[,8]) + (2*data[,2]))/8)/data[,6])
+colnames(RABD665) <- "RABD665"
+rat <- vLen/len
+y <- seq(0,vLen,by=rat,length.out = 23956)
+y <- seq(0,vLen,by=rat)
+y <- y[-1]
+data1 <- cbind(data,RABD665)
+dat1 <- as.data.frame(cbind(data1,y))
 
-extent(whiteRef) <- extent(subR9); extent(darkRef) <- extent(subR9)
-normalized9 <- overlay(subR9,whiteRef,darkRef,fun = normFun,filename = "normalized9.tif",overwrite = TRUE)
+library(ggplot2)
+library(zoo)
 
-extent(whiteRef) <- extent(subR10); extent(darkRef) <- extent(subR10)
-normalized10 <- overlay(subR10,whiteRef,darkRef,fun = normFun,filename = "normalized10.tif",overwrite = TRUE)
+ggplot(data=dat1) +geom_line(aes(y=rollmean(RABD665,10,na.pad=TRUE),x=y))+geom_line(aes(y=RABD665,x=y),alpha=.1)+ylim(0.98,1.5)
 
-extent(whiteRef) <- extent(subR11); extent(darkRef) <- extent(subR11)
-normalized11 <- overlay(subR11,whiteRef,darkRef,fun = normFun,filename = "normalized11.tif",overwrite = TRUE)
+head(data)
+dim(data)
+library(pavo)
 
-extent(whiteRef) <- extent(subR12); extent(darkRef) <- extent(subR12)
-normalized12 <- overlay(subR12,whiteRef,darkRef,fun = normFun,filename = "normalized12.tif",overwrite = TRUE)
+par(mar = c(4, 4, 2, 2))
+data(teal)
+plot(teal, type = "o", col = spec2rgb(teal))
 
-extent(whiteRef) <- extent(subR13); extent(darkRef) <- extent(subR13)
-normalized13 <- overlay(subR13,whiteRef,darkRef,fun = normFun,filename = "normalized13.tif",overwrite = TRUE)
+grid.arrange(rgb,plot)
+library("gridExtra")
+library("ggplotify")
+library("ggplot2")
+install.packages("ggplotify")
 
-extent(whiteRef) <- extent(subR14); extent(darkRef) <- extent(subR14)
-normalized14 <- overlay(subR14,whiteRef,darkRef,fun = normFun,filename = "normalized14.tif",overwrite = TRUE)
-
-extent(whiteRef) <- extent(subR15); extent(darkRef) <- extent(subR15)
-normalized15 <- overlay(subR15,whiteRef,darkRef,fun = normFun,filename = "normalized15.tif",overwrite = TRUE)
-
-#1:01 at least 20 minutes in
-4091/60
-extent(subR)
-
-##replace filen with normalized data as you move down core
-toc()
-
-test <- getValues(normalized,row = 1)
-
-testRaw<- raster::subset(normalized,c(270,188, 150))
-testNormalized <- raster::subset(subR,c(270,188, 150))
-testWhite <- raster::subset(whiteRef,c(270,188, 150))
-testDark <- raster::subset(darkRef,c(270,188, 150))
-
-layout(matrix(c(1,1,1,1), 2, 2, byrow = TRUE),
-       widths=c(1,1), heights=c(1,1))
-plotRGB(testRaw, axes=TRUE, stretch="lin", main="Raw Image")
-plotRGB(testNormalized, axes=TRUE, stretch="lin", main="Normalized")
-plotRGB(testWhite, axes=TRUE, stretch="lin", main="White Ref")
-plotRGB(testDark, axes=TRUE, stretch="lin", main="Dark Ref")
+data1 <- merge(data,RABD660)
+dim(data)
+dim(normalized)
+rgb <- as.grob(~plotRGB(normalized, axes=TRUE, stretch="lin", main="Raw Image"))
+plot <-   as.grob(~ggplot(data=data1, aes(y=RABD660))+geom_point())
 
